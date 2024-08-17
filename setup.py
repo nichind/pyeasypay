@@ -7,14 +7,14 @@ def readme():
 
 
 setup(
-    name='easypay',
-    version='0.0.1',
+    name='pyeasypay',
+    version='0.0.2',
     author='nichind',
     author_email='nichinddev@gmail.com',
     description='Make money from your Python projects the easy way.',
     long_description=readme(),
     long_description_content_type='text/markdown',
-    url='https://github.com/nichind/easypay',
+    url='https://github.com/nichind/pyeasypay',
     packages=find_packages(),
     install_requires=[''],
     classifiers=[
@@ -22,8 +22,5 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent'
     ],
-    project_urls={
-        'Documentation': 'https://github.com/nichind/ScreenColor'
-    },
     python_requires='>=3.8'
 )
