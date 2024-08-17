@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name='pyeasypay',
-    version='0.0.1',
+    version='0.1',
     author='nichind',
     author_email='nichinddev@gmail.com',
     description='Make money from your Python projects the easy way.',
@@ -16,7 +16,11 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/nichind/pyeasypay',
     packages=find_packages(),
-    install_requires=[''],
+    install_requires=[
+        'aiohttp',
+        'python-dotenv',
+        'aiocryptopay'
+    ],
     classifiers=[
         'Programming Language :: Python :: 3.11',
         'License :: OSI Approved :: MIT License',
