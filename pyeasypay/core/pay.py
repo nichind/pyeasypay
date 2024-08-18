@@ -2,10 +2,21 @@ from dotenv import load_dotenv
 from os import environ
 from os.path import dirname, basename, isfile, join
 import glob
-from threading import Thread
-from asyncio import run, sleep
-import asyncio
-from .methods import *
+
+
+class Provider:
+    """
+    Provider instance
+    """
+    def __init__(self, name: str, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        self.name: str = name
+
+
+class Providers:
+    def __init__(self):
+        pass
 
 
 class EasyPay:
@@ -14,18 +25,25 @@ class EasyPay:
     """
     def __init__(self, **kwargs):
         load_dotenv()
-        for name, value in environ.items():
-            if name.upper() in ['API_KEY', 'PROVIDER', 'NETWORK', 'LOGIN', 'PASSWORD', 'SECRET_KEY']:
-                setattr(self, name.lower(), value)
+        self.provider = Providers()
         for k, v in kwargs.items():
             setattr(self, k, v)
-        if 'provider' not in self.__dict__:
-            raise ValueError('Provider is required')
+        if 'provider' not in self.__dict__ and 'providers' not in self.__dict__:
+            raise ValueError('At least one provider is required')
+        if 'providers' in self.__dict__:
+            for provider in self.providers:
+                self.configure_provider(provider)
 
-    async def create_invoice(self, amount: int | float, currency: str = 'USD'):
-        invoice = Invoice(self, amount, currency)
-        await invoice.create()
-        return invoice
+    def configure_provider(self, provider: str | Provider, **kwargs):
+        setattr(
+            self.provider,
+            provider.name if isinstance(provider, Provider) else provider,
+            Provider(provider, **kwargs) if isinstance(provider, str) else provider
+        )
+
+    async def create_invoice(self, amount: int | float, currency: str = 'USD', provider: str | Provider = None):
+        invoice = Invoice(self.provider, amount, currency)
+        return await invoice.create(provider)
 
     def __repr__(self):
         return f'EasyPay({self.__dict__})'
@@ -41,8 +59,8 @@ class Invoice:
         status: str
         identifier: str
     """
-    def __init__(self, creds: EasyPay, amount: int | float, currency: str = 'USDT'):
-        self.creds = creds
+    def __init__(self, providers: Providers, amount: int | float, currency: str = 'USDT'):
+        self.providers = providers
         self.currency = currency
         self.amount = amount
         self.status = 'creating'
@@ -50,19 +68,28 @@ class Invoice:
         self.pay_info = None
         self.invoice = None
 
-    async def create(self, run_check: bool = False):
-        modules = glob.glob(join(dirname(__file__) + '\\methods', "*.py"))
+    async def create(self, provider: str | Provider, run_check: bool = False):
+        modules = glob.glob(join(dirname(__file__) + '\\providers', "*.py"))
         __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
 
-        if self.creds.provider not in __all__:
+        if (isinstance(provider, str) and provider not in __all__) or (isinstance(provider, Provider) and provider.name not in __all__):
             raise ValueError('Provider is not supported')
 
-        provider = __import__(f'pyeasypay.core.methods.{self.creds.provider}', globals(), locals(), ['Invoice'], 0)
-        self.invoice = provider.Invoice(self.creds, self, self.amount)
+        module = __import__(f'pyeasypay.core.providers.{provider if isinstance(provider, str) else provider.name}',
+                              globals(), locals(), ['Invoice'], 0)
+        try:
+            self.invoice = module.Invoice(
+                self.providers.__dict__[provider if isinstance(provider, str) else provider.name],
+                self, self.amount
+            )
+        except KeyError:
+            raise ValueError('Provider was not added, please add it first')
         await self.invoice.create()
 
         if run_check:
             print(NotImplementedError('run_check is not implemented yet'))
+
+        return self
 
     async def check(self):
         if self.invoice is None:

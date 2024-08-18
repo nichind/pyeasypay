@@ -5,16 +5,16 @@ from asyncio import wait_for
 
 
 class Invoice:
-    def __init__(self, creds, invoice, amount):
-        self.creds = creds
+    def __init__(self, provider, invoice, amount):
+        self.creds = provider
         self.invoice = invoice
         self.amount = amount
 
-        if 'api_key' not in creds.__dict__.keys():
-            raise ValueError('api_key is required')
+        if 'api_key' not in self.creds.__dict__.keys():
+            raise ValueError(f'api_key is required for {self.creds.provider} provider')
 
-        if 'secret' not in creds.__dict__.keys():
-            raise ValueError('secret is required')
+        if 'secret' not in self.creds.__dict__.keys():
+            raise ValueError(f'secret is required for {self.creds.provider} provider')
 
     def create_signature(self):
         signature_string = f"{self.creds.api_key}:{self.amount}:{self.invoice.currency}:{self.creds.secret}:{self.invoice.identifier}"

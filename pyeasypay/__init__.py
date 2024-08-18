@@ -1,3 +1,2 @@
-from .core import EasyPay, Invoice
+from .core import EasyPay, Invoice, Provider
 
-__all__ = ['EasyPay', 'Invoice']
