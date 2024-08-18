@@ -72,7 +72,7 @@ class Invoice:
         self.invoice = None
 
     async def create(self, provider: str | Provider, run_check: bool = False):
-        modules = glob.glob(join(dirname(__file__) + '\\providers', "*.py"))
+        modules = glob.glob(join(dirname(__file__) + '/providers', "*.py"))
         __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
 
         if ((isinstance(provider, str) and provider not in __all__) or
