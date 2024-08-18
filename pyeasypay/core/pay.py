@@ -51,7 +51,6 @@ class Invoice:
         self.invoice = None
 
     async def create(self, run_check: bool = False):
-        print(f'Creating invoice for {self.amount} {self.currency} using {self.creds.provider} provider...')
         modules = glob.glob(join(dirname(__file__) + '\\methods', "*.py"))
         __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
 
@@ -63,7 +62,7 @@ class Invoice:
         await self.invoice.create()
 
         if run_check:
-            print('[run_check] Not implemented yet')
+            print(NotImplementedError('run_check is not implemented yet'))
 
     async def check(self):
         if self.invoice is None:
