@@ -34,7 +34,7 @@ class EasyPay:
         if 'provider' not in self.__dict__ and 'providers' not in self.__dict__:
             raise ValueError('At least one provider is required')
         if 'providers' in self.__dict__:
-            for provider in self.providers:
+            for provider in self.__dict__['providers']:
                 self.configure_provider(provider)
 
     def configure_provider(self, provider: str | Provider, **kwargs):
@@ -75,22 +75,28 @@ class Invoice:
         modules = glob.glob(join(dirname(__file__) + '\\providers', "*.py"))
         __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
 
-        if (isinstance(provider, str) and provider not in __all__) or (isinstance(provider, Provider) and provider.name not in __all__):
-            raise ValueError('Provider is not supported')
+        if ((isinstance(provider, str) and provider not in __all__) or
+                (isinstance(provider, Provider) and provider.name not in __all__)):
+            raise ValueError(
+                f'Provider {provider.name if isinstance(provider, Provider) else provider} is not supported'
+            )
 
-        module = __import__(f'pyeasypay.core.providers.{provider if isinstance(provider, str) else provider.name}',
-                              globals(), locals(), ['Invoice'], 0)
+        module = __import__(f'pyeasypay.core.providers.{provider.name if isinstance(provider, Provider) else provider}',
+                            globals(), locals(), ['Invoice'], 0)
         try:
             self.invoice = module.Invoice(
-                self.providers.__dict__[provider if isinstance(provider, str) else provider.name],
+                self.providers.__dict__[provider.name if isinstance(provider, Provider) else provider],
                 self, self.amount
             )
         except KeyError:
-            raise ValueError('Provider was not added, please add it first')
+            raise ValueError(
+                f'Provider {provider.name if isinstance(provider, Provider) else provider} '
+                f'was not added, please add it first'
+            )
         await self.invoice.create()
 
         if run_check:
-            print(NotImplementedError('run_check is not implemented yet'))
+            print(NotImplementedError('run_check is not implemented yet, check invoice status manually'))
 
         return self
 

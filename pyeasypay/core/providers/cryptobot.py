@@ -1,4 +1,5 @@
 from aiocryptopay import AioCryptoPay, Networks
+from aiocryptopay.exceptions import factory
 
 
 class Invoice:
@@ -18,7 +19,11 @@ class Invoice:
                                    if self.creds.network else Networks.MAIN_NET)
 
     async def create(self):
-        invoice = await self.crypto.create_invoice(asset=self.invoice.currency, amount=self.amount)
+        try:
+            invoice = await self.crypto.create_invoice(asset=self.invoice.currency, amount=self.amount)
+        except factory.CodeErrorFactory as e:
+            await self.crypto.close()
+            raise ValueError(f"Wasn't able to create invoice ({e.code}: {e.name})")
         self.invoice.pay_info = invoice.bot_invoice_url
         self.invoice.identifier = invoice.invoice_id
         self.invoice.status = invoice.status

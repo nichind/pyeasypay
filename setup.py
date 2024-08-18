@@ -21,7 +21,8 @@ setup(
         'python-dotenv',
         'aiocryptopay',
         'AaioAPI',
-        'requests'
+        'requests',
+        'sqlalchemy'
     ],
     classifiers=[
         'Programming Language :: Python :: 3.11',
