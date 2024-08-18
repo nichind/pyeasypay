@@ -13,6 +13,9 @@ class Provider:
             setattr(self, k, v)
         self.name: str = name
 
+    def __repr__(self):
+        return f'Provider({self.__dict__})'
+
 
 class Providers:
     def __init__(self):
