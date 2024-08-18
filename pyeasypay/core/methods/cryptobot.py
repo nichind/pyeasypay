@@ -1,5 +1,4 @@
 from aiocryptopay import AioCryptoPay, Networks
-from aiohttp import web
 
 
 class Invoice:
@@ -8,10 +7,10 @@ class Invoice:
         self.invoice = invoice
         self.amount = amount
 
-        if not creds.api_key:
+        if 'api_key' not in creds.__dict__.keys():
             raise ValueError('api_key is required')
 
-        if not amount:
+        if 'amount' not in creds.__dict__.keys():
             raise ValueError('Amount is required')
 
         self.crypto = AioCryptoPay(token=creds.api_key,

@@ -15,7 +15,7 @@ class EasyPay:
     def __init__(self, **kwargs):
         load_dotenv()
         for name, value in environ.items():
-            if name.upper() in ['API_KEY', 'PROVIDER']:
+            if name.upper() in ['API_KEY', 'PROVIDER', 'NETWORK', 'LOGIN', 'PASSWORD', 'SECRET_KEY']:
                 setattr(self, name.lower(), value)
         for k, v in kwargs.items():
             setattr(self, k, v)

@@ -19,7 +19,8 @@ setup(
     install_requires=[
         'aiohttp',
         'python-dotenv',
-        'aiocryptopay'
+        'aiocryptopay',
+        'AaioAPI'
     ],
     classifiers=[
         'Programming Language :: Python :: 3.11',
