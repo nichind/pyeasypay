@@ -22,7 +22,7 @@ class EasyPay:
         if 'provider' not in self.__dict__:
             raise ValueError('Provider is required')
 
-    async def create_invoice(self, amount: int, currency: str = 'USD'):
+    async def create_invoice(self, amount: int | float, currency: str = 'USD'):
         invoice = Invoice(self, amount, currency)
         await invoice.create()
         return invoice

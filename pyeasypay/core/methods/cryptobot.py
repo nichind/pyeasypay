@@ -10,9 +10,6 @@ class Invoice:
         if 'api_key' not in creds.__dict__.keys():
             raise ValueError('api_key is required')
 
-        if 'amount' not in creds.__dict__.keys():
-            raise ValueError('Amount is required')
-
         self.crypto = AioCryptoPay(token=creds.api_key,
                                    network=(Networks.MAIN_NET if creds.network == 'main' else Networks.TEST_NET)
                                    if creds.network else Networks.MAIN_NET)

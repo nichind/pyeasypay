@@ -28,7 +28,8 @@ class Invoice:
         lang = self.creds.language if 'language' in self.creds.__dict__.keys() else 'en'
 
         signature = self.create_signature()
-        return await client.create_payment(self.invoice.identifier, self.amount, lang, self.invoice.currency, 'AAIO Payment')
+        self.invoice.pay_info = await client.create_payment(self.invoice.identifier, self.amount, lang, self.invoice.currency, 'AAIO Payment')
+        return self.invoice.pay_info
 
     async def check(self):
         client = AsyncAaioAPI(self.creds.api_key, self.creds.secret, self.creds.api_key)
