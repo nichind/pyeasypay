@@ -20,7 +20,6 @@ setup(
         'aiohttp',
         'python-dotenv',
         'aiocryptopay',
-        'AaioAPI',
         'requests',
         'sqlalchemy'
     ],
