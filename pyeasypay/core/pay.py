@@ -43,9 +43,10 @@ class EasyPay:
 
     async def create_invoice(self, amount: int | float, currency: str = 'USD', provider: str | Provider = None,
                              identifier=None, **kwargs):
-        invoice = Invoice(self.provider, amount, currency)
+        invoice = Invoice(self.provider, amount=amount, currency=currency)
         if identifier:
-            return await self.invoice(identifier=identifier, amount=amount, currency=currency, provider=provider, **kwargs)
+            return await self.invoice(identifier=identifier, amount=amount, currency=currency, provider=provider,
+                                      **kwargs)
         return await invoice.create(provider)
 
     async def invoice(self, **kwargs):
@@ -57,7 +58,7 @@ class EasyPay:
 
 
 class Invoice:
-    def __init__(self, providers: Providers, amount: int | float, currency: str = 'USDT', **kwargs):
+    def __init__(self, providers: Providers, **kwargs):
         """
         Invoice class, use it to create an invoice
         Args:
@@ -69,8 +70,6 @@ class Invoice:
         """
 
         self.providers = providers
-        self.currency = currency
-        self.amount = amount
         self.status = 'creating'
         self.identifier = None
         self.pay_info = None
@@ -93,7 +92,7 @@ class Invoice:
         try:
             self.invoice = module.Invoice(
                 self.providers.__dict__[provider_name],
-                self, self.amount
+                self, self.amount if 'amount' in self.__dict__ else None
             )
         except KeyError:
             raise ValueError(

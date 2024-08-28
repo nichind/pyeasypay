@@ -6,10 +6,10 @@ from dotenv import load_dotenv
 
 async def main():
     crystalpay = Provider('crystalpay', login='', secret='')
-    cryptobot = Provider('cryptobot', api_key='', network='test')
+    cryptobot = Provider('cryptobot', api_key='16439:AAWcbxKxgsvblzwgMM5EGYIIOXAsltpInQ5', network='test')
     pay = EasyPay(providers=[crystalpay, cryptobot])
     invoice = await pay.create_invoice(0.25, 'TON', 'cryptobot')
-    invoice_from_memory = await pay.invoice(amount=0.25, currency='TON', provider='cryptobot', identifier=invoice.identifier,
+    invoice_from_memory = await pay.invoice(provider='cryptobot', identifier=invoice.identifier,
                                             pay_info=invoice.pay_info)
     while invoice_from_memory.status != 'paid':
         await sleep(5)
