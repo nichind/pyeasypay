@@ -1,5 +1,3 @@
-from dotenv import load_dotenv
-from os import environ
 from os.path import dirname, basename, isfile, join
 import glob
 
@@ -27,7 +25,6 @@ class EasyPay:
     Create an instance of EasyPay
     """
     def __init__(self, **kwargs):
-        load_dotenv()
         self.provider = Providers()
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -44,25 +41,33 @@ class EasyPay:
             Provider(provider, **kwargs) if isinstance(provider, str) else provider
         )
 
-    async def create_invoice(self, amount: int | float, currency: str = 'USD', provider: str | Provider = None):
+    async def create_invoice(self, amount: int | float, currency: str = 'USD', provider: str | Provider = None,
+                             identifier=None, **kwargs):
         invoice = Invoice(self.provider, amount, currency)
+        if identifier:
+            return await self.invoice(identifier=identifier, amount=amount, currency=currency, provider=provider, **kwargs)
         return await invoice.create(provider)
+
+    async def invoice(self, **kwargs):
+        invoice = Invoice(self.provider, **kwargs)
+        return invoice
 
     def __repr__(self):
         return f'EasyPay({self.__dict__})'
 
 
 class Invoice:
-    """
-    Invoice class, use it to create an invoice
-    Args:
-        amount: int
-    Attributes:
-        amount: int
-        status: str
-        identifier: str
-    """
-    def __init__(self, providers: Providers, amount: int | float, currency: str = 'USDT'):
+    def __init__(self, providers: Providers, amount: int | float, currency: str = 'USDT', **kwargs):
+        """
+        Invoice class, use it to create an invoice
+        Args:
+            amount: int
+        Attributes:
+            amount: int
+            status: str
+            identifier: str
+        """
+
         self.providers = providers
         self.currency = currency
         self.amount = amount
@@ -71,28 +76,34 @@ class Invoice:
         self.pay_info = None
         self.invoice = None
 
-    async def create(self, provider: str | Provider, run_check: bool = False):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    async def init_invoice(self, provider: str | Provider):
         modules = glob.glob(join(dirname(__file__) + '/providers', "*.py"))
         __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
-
-        if ((isinstance(provider, str) and provider not in __all__) or
-                (isinstance(provider, Provider) and provider.name not in __all__)):
+        provider_name = provider.name if isinstance(provider, Provider) else provider
+        if provider_name not in __all__:
             raise ValueError(
-                f'Provider {provider.name if isinstance(provider, Provider) else provider} is not supported'
+                f'Provider {provider_name} is not supported'
             )
 
-        module = __import__(f'pyeasypay.core.providers.{provider.name if isinstance(provider, Provider) else provider}',
+        module = __import__(f'pyeasypay.core.providers.{provider_name}',
                             globals(), locals(), ['Invoice'], 0)
         try:
             self.invoice = module.Invoice(
-                self.providers.__dict__[provider.name if isinstance(provider, Provider) else provider],
+                self.providers.__dict__[provider_name],
                 self, self.amount
             )
         except KeyError:
             raise ValueError(
-                f'Provider {provider.name if isinstance(provider, Provider) else provider} '
+                f'Provider {provider_name} '
                 f'was not added, please add it first'
             )
+        return self.invoice
+
+    async def create(self, provider: str | Provider, run_check: bool = False):
+        await self.init_invoice(provider)
         await self.invoice.create()
 
         if run_check:
@@ -101,8 +112,12 @@ class Invoice:
         return self
 
     async def check(self):
+        if 'identifier' not in self.__dict__ or self.identifier is None:
+            raise ValueError('Identifier is not provided, create invoice first or set identifier manually')
         if self.invoice is None:
-            return ValueError('Invoice needs to be created first')
+            if 'provider' not in self.__dict__.keys():
+                raise ValueError('Provider is not provided, create invoice first or set provider manually')
+            await self.init_invoice(self.provider)
         return await self.invoice.check()
 
     def __repr__(self):

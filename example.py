@@ -9,10 +9,12 @@ async def main():
     cryptobot = Provider('cryptobot', api_key='', network='test')
     pay = EasyPay(providers=[crystalpay, cryptobot])
     invoice = await pay.create_invoice(0.25, 'TON', 'cryptobot')
-    while invoice.status != 'paid':
+    invoice_from_memory = await pay.invoice(amount=0.25, currency='TON', provider='cryptobot', identifier=invoice.identifier,
+                                            pay_info=invoice.pay_info)
+    while invoice_from_memory.status != 'paid':
         await sleep(5)
-        await invoice.check()
-        print(invoice)
+        await invoice_from_memory.check()
+        print(invoice_from_memory)
 
 
 if __name__ == '__main__':
