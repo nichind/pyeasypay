@@ -1,5 +1,16 @@
+from requests import get
+from importlib.metadata import version
 from os.path import dirname, basename, isfile, join
 import glob
+
+
+try:
+    current_version = version("pyeasypay")
+    last_version = get('https://pypi.org/pypi/pyeasypay/json').json()['info']['version']
+    if last_version != current_version:
+        print(f"pyeasypay {last_version} is avaliable (current: {current_version}) - pip install pyeasypay -U")
+except:
+    pass
 
 
 class Provider:
