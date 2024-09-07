@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name='pyeasypay',
-    version='0.2.6',
+    version='0.2.7',
     author='nichind',
     author_email='nichinddev@gmail.com',
     description='Make money from your Python projects the easy way.',
