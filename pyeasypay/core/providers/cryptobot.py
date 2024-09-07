@@ -23,7 +23,7 @@ class Invoice:
             invoice = await self.crypto.create_invoice(asset=self.invoice.currency, amount=self.amount)
         except factory.CodeErrorFactory as e:
             await self.crypto.close()
-            raise ValueError(f"Wasn't able to create invoice ({e.code}: {e.name})")
+            raise ValueError(f"Wasn't able to create invoice for {self.creds.name} provider: ({e.code}: {e.name})")
         self.invoice.pay_info = invoice.bot_invoice_url
         self.invoice.identifier = invoice.invoice_id
         self.invoice.status = invoice.status

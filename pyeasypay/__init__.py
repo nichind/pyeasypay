@@ -1,2 +1,2 @@
-from .core import EasyPay, Invoice, Provider
+from .core import EasyPay, Invoice, Provider, Providers
 

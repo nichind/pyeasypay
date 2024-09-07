@@ -34,7 +34,7 @@ class Invoice:
         data = response.json()
 
         if data.get("error"):
-            raise ValueError(data.get("errors"))
+            raise ValueError(f"Wasn't able to create invoice for {self.creds.name} provider:  {data.get("errors")}")
         self.invoice.identifier = data.get("id")
         self.invoice.pay_info = data.get("url")
         return self.invoice.pay_info

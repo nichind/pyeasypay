@@ -1,3 +1,4 @@
+from typing import Any
 from requests import get
 from importlib.metadata import version
 from os.path import dirname, basename, isfile, join
@@ -28,7 +29,17 @@ class Provider:
 
 class Providers:
     def __init__(self):
-        pass
+        modules = glob.glob(join(dirname(__file__) + '/providers', "*.py"))
+        __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
+        for _ in __all__:
+            setattr(self, _, Provider(_))
+
+
+    def list(self):
+        return self.__dict__
+
+    def __repr__(self):
+        return f'Providers({self.__dict__})'
 
 
 class EasyPay:
@@ -40,8 +51,10 @@ class EasyPay:
         for k, v in kwargs.items():
             setattr(self, k, v)
         if 'provider' not in self.__dict__ and 'providers' not in self.__dict__:
-            raise ValueError('At least one provider is required')
+            raise ValueError('At least one provider is required for EasyPay to work')
         if 'providers' in self.__dict__:
+            if isinstance(self.__dict__['providers'], Provider):
+                return self.configure_provider(self.__dict__['providers'])
             for provider in self.__dict__['providers']:
                 self.configure_provider(provider)
 
@@ -93,6 +106,18 @@ class Invoice:
         modules = glob.glob(join(dirname(__file__) + '/providers', "*.py"))
         __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
         provider_name = provider.name if isinstance(provider, Provider) else provider
+        if self.currency is None or self.currency == '':
+            self.currency = 'USD'
+            print("Currency was not provided for create_invoice, defaulting to USD")
+        if provider_name == 'None' or provider_name is None or provider_name == '':
+            for provider, args in self.providers.__dict__.items():
+                if len(args.__dict__) > 1:
+                    provider_name = provider
+                    print(f"Provider was not provided for create_invoice, defaulting to {provider_name}"
+                          " since it was added to the EasyPay instance") 
+                    break
+            if provider_name == '' or provider_name is None or provider_name == 'None':
+                raise ValueError('Provider is not provided for create_invoice')
         if provider_name not in __all__:
             raise ValueError(
                 f'Provider {provider_name} is not supported'
