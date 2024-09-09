@@ -14,12 +14,23 @@
 </div>
 
 # Installation
+
 Install package with pip:
+
 ```commandline
 pip install pyeasypay
 ```
 
+or
+
+```commandline
+python3 -m pip install pyeasypay
+```
+
 # Example usage
+
+Example on creating invoice and waiting for it to be paid:
+
 ```python
 from asyncio import run, sleep
 from pyeasypay import EasyPay, Provider
@@ -46,12 +57,16 @@ if __name__ == '__main__':
 
 # Supported providers
 
-| Name       | Tested | Required kwargs   |
+List of supported providers:
+
+| Provider       | Status | Kwargs for Proiver (* is required)  |
 |------------|---------|-------------------|
-| CryptoBot  | ✅       | `api_key`         |
-| CrystalPay | ✅       | `login`, `secret` |
-| AAIO       | ❌       | -                 |
+| CryptoBot  | ✅       | `api_key`*, `network`         |
+| CrystalPay | ✅       | `login`*, `secret`* |
+| AAIO       | WIP    |                                           |
 
 # Contributors
+
+Contributions are welcomed!
 
 <img src="https://contrib.rocks/image?repo=nichind/pyeasypay" alt="Contributors" style="max-width: 100%;"/>
