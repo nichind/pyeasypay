@@ -61,8 +61,8 @@ List of supported providers:
 
 | Provider       | Status | Kwargs for Proiver (* is required)  |
 |------------|---------|-------------------|
-| CryptoBot  | ✅       | `api_key`*, `network`         |
-| CrystalPay | ✅       | `login`*, `secret`* |
+| CryptoBot  | ✅       | `api_key`\*, `network`         |
+| CrystalPay | ✅       | `login`\*, `secret`\* |
 | AAIO       | WIP    |                                           |
 
 # Contributors
