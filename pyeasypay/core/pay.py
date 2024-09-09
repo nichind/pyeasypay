@@ -1,4 +1,5 @@
-from typing import Any
+from collections.abc import Iterable
+from typing import Any, List, Self
 from requests import get
 from importlib.metadata import version
 from os.path import dirname, basename, isfile, join
@@ -8,8 +9,9 @@ import glob
 try:
     current_version = version("pyeasypay")
     last_version = get('https://pypi.org/pypi/pyeasypay/json').json()['info']['version']
+    print(f"pyesaypay {current_version} is still in beta, there can be some bugs, if you find one - report it at https://github.com/nichind/pyeasypay/issues")
     if last_version != current_version:
-        print(f"pyeasypay {last_version} is avaliable (current: {current_version}) - pip install pyeasypay -U")
+        print(f"pyeasypay {last_version} is avaliable (current: {current_version}) - python3 -m pip install pyeasypay -U")
 except:
     pass
 
@@ -18,81 +20,48 @@ class Provider:
     """
     Provider instance
     """
-    def __init__(self, name: str, **kwargs):
+    def __init__(self, name: str, **kwargs) -> None:
         for k, v in kwargs.items():
             setattr(self, k, v)
         self.name: str = name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Provider({self.__dict__})'
 
 
 class Providers:
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Providers initialization
+
+        Finds all provider modules in the providers directory and
+        adds them as attributes to the instance
+        """
         modules = glob.glob(join(dirname(__file__) + '/providers', "*.py"))
         __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
         for _ in __all__:
             setattr(self, _, Provider(_))
 
+    def list(self) -> List[Provider]:
+        """
+        List all providers available in the EasyPay instance
+        """
+        return list(self.__dict__.values())
 
-    def list(self):
-        return self.__dict__
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Providers({self.__dict__})'
 
 
-class EasyPay:
-    """
-    Create an instance of EasyPay
-    """
-    def __init__(self, **kwargs):
-        self.provider = Providers()
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        if 'provider' not in self.__dict__ and 'providers' not in self.__dict__:
-            raise ValueError('At least one provider is required for EasyPay to work')
-        if 'providers' in self.__dict__:
-            if isinstance(self.__dict__['providers'], Provider):
-                return self.configure_provider(self.__dict__['providers'])
-            for provider in self.__dict__['providers']:
-                self.configure_provider(provider)
-
-    def configure_provider(self, provider: str | Provider, **kwargs):
-        setattr(
-            self.provider,
-            provider.name if isinstance(provider, Provider) else provider,
-            Provider(provider, **kwargs) if isinstance(provider, str) else provider
-        )
-
-    async def create_invoice(self, amount: int | float, currency: str = 'USD', provider: str | Provider = None,
-                             identifier=None, **kwargs):
-        invoice = Invoice(self.provider, amount=amount, currency=currency)
-        if identifier:
-            return await self.invoice(identifier=identifier, amount=amount, currency=currency, provider=provider,
-                                      **kwargs)
-        return await invoice.create(provider)
-
-    async def invoice(self, **kwargs):
-        invoice = Invoice(self.provider, **kwargs)
-        return invoice
-
-    def __repr__(self):
-        return f'EasyPay({self.__dict__})'
-
 
 class Invoice:
-    def __init__(self, providers: Providers, **kwargs):
+    def __init__(self, providers: Providers, **kwargs) -> None:
         """
-        Invoice class, use it to create an invoice
-        Args:
-            amount: int
-        Attributes:
-            amount: int
-            status: str
-            identifier: str
-        """
+        Invoice initialization
 
+        Args:
+            providers: Providers instance
+            **kwargs: Additional keyword arguments to set attributes for the instance
+        """
         self.providers = providers
         self.status = 'creating'
         self.identifier = None
@@ -102,7 +71,19 @@ class Invoice:
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    async def init_invoice(self, provider: str | Provider):
+    async def init_invoice(self, provider: str | Provider) -> Self:
+        """
+        Initialize invoice object
+
+        Args:
+            provider: Provider name or Provider instance
+
+        Returns:
+            Invoice object
+
+        Raises:
+            ValueError: If provider is not supported or was not added
+        """
         modules = glob.glob(join(dirname(__file__) + '/providers', "*.py"))
         __all__ = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
         provider_name = provider.name if isinstance(provider, Provider) else provider
@@ -137,7 +118,20 @@ class Invoice:
             )
         return self.invoice
 
-    async def create(self, provider: str | Provider, run_check: bool = False):
+    async def create(self, provider: str | Provider, run_check: bool = False) -> Self:
+        """
+        Creates an invoice object
+
+        Args:
+            provider: Provider name or Provider instance
+            run_check: Whether to run invoice status check after creation
+
+        Returns:
+            Self: self (Invoice object)
+
+        Raises:
+            ValueError: If provider is not supported or was not added
+        """
         await self.init_invoice(provider)
         await self.invoice.create()
 
@@ -146,7 +140,16 @@ class Invoice:
 
         return self
 
-    async def check(self):
+    async def check(self) -> str:
+        """
+        Checks the status of the invoice.
+
+        Returns:
+            str: Invoice status (paid or else)
+
+        Raises:
+            ValueError: If provider or identifier were not provided.
+        """
         if 'identifier' not in self.__dict__ or self.identifier is None:
             raise ValueError('Identifier is not provided, create invoice first or set identifier manually')
         if self.invoice is None:
@@ -155,5 +158,78 @@ class Invoice:
             await self.init_invoice(self.provider)
         return await self.invoice.check()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Invoice({self.__dict__})'
+
+
+
+class EasyPay:
+    """
+    EasyPay instance
+    """
+    def __init__(self, **kwargs) -> None:
+        """
+        EasyPay initialization
+
+        Args:
+            **kwargs: Additional keyword arguments to set attributes for the instance
+        """
+        self.provider = Providers()
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        if 'provider' not in self.__dict__ and 'providers' not in self.__dict__:
+            raise ValueError('At least one provider is required for EasyPay to work')
+        if 'providers' in self.__dict__:
+            if isinstance(self.__dict__['providers'], Provider):
+                return self.configure_provider(self.__dict__['providers'])
+            for provider in self.__dict__['providers']:
+                self.configure_provider(provider)
+
+    def configure_provider(self, provider: str | Provider, **kwargs) -> None:
+        """
+        Configure provider for EasyPay instance
+
+        Args:
+            provider: Provider instance or name of provider as string
+            **kwargs: Additional keyword arguments to pass to Provider constructor
+        """
+        setattr(
+            self.provider,
+            provider.name if isinstance(provider, Provider) else provider,
+            Provider(provider, **kwargs) if isinstance(provider, str) else provider
+        )
+
+    async def create_invoice(self, amount: int | float, currency: str = 'USD', provider: str | Provider = None,
+                             identifier=None, **kwargs) -> Invoice:
+        """_summary_
+
+        Args:
+            amount (int | float): _description_
+            currency (str, optional): _description_. Defaults to 'USD'.
+            provider (str | Provider, optional): _description_. Defaults to None.
+            identifier (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            Invoice: invoice object
+        """
+        invoice = Invoice(self.provider, amount=amount, currency=currency)
+        if identifier:
+            return await self.invoice(identifier=identifier, amount=amount, currency=currency, provider=provider,
+                                      **kwargs)
+        return await invoice.create(provider)
+
+    async def invoice(self, **kwargs) -> Invoice | None:
+        """
+        Creates an invoice object
+
+        Args:
+            **kwargs: Arguments to pass to Invoice constructor
+
+        Returns:
+            Invoice | None: Invoice object or None if failed
+        """
+        invoice = Invoice(self.provider, **kwargs)
+        return invoice
+
+    def __repr__(self) -> str:
+        return f'EasyPay({self.__dict__})'
