@@ -3,6 +3,7 @@ from typing import Any, List, Self
 from requests import get
 from importlib.metadata import version
 from os.path import dirname, basename, isfile, join
+from datetime import datetime
 import glob
 
 
@@ -81,6 +82,7 @@ class Invoice:
         self.identifier = None
         self.pay_info = None
         self.invoice = None
+        self.created_at = datetime.now()
 
         for k, v in kwargs.items():
             setattr(self, k, v)
