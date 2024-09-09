@@ -17,10 +17,24 @@ except:
 
 
 class Provider:
-    """
-    Provider instance
-    """
     def __init__(self, name: str, **kwargs) -> None:
+        """
+        Provider initialization
+
+        Args:
+            name: Provider name, should be the same as the module name
+            **kwargs: Additional keyword arguments to set attributes for the 
+            
+            
+        kwargs you may use (not limited to):
+            api_key: API key for the provider
+            secret: Secret key for the provider
+            login: Login for the provider
+            password: Password for the provider
+            redirect_url: Redirect URL for the provider
+            callback_url: Callback URL for the provider
+            network: Network for the provider
+        """
         for k, v in kwargs.items():
             setattr(self, k, v)
         self.name: str = name
@@ -70,6 +84,16 @@ class Invoice:
 
         for k, v in kwargs.items():
             setattr(self, k, v)
+
+    @property
+    def pay_info(self) -> str:
+        """
+        Invoice payment information.
+
+        Returns:
+            str: Invoice payment information, contains invoice URL or other information.
+        """
+        return self.__dict__['pay_info']
 
     async def init_invoice(self, provider: str | Provider) -> Self:
         """
