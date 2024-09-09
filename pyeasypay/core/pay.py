@@ -85,16 +85,6 @@ class Invoice:
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    @property
-    def pay_info(self) -> str:
-        """
-        Invoice payment information.
-
-        Returns:
-            str: Invoice payment information, contains invoice URL or other information.
-        """
-        return self.__dict__['pay_info']
-
     async def init_invoice(self, provider: str | Provider) -> Self:
         """
         Initialize invoice object
