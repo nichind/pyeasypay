@@ -74,7 +74,7 @@ class Invoice:
         Invoice initialization
 
         Args:
-            providers: Providers instance
+            providers: Providers instancec from EasyPay()
             **kwargs: Additional keyword arguments to set attributes for the instance
         """
         self.providers = providers
@@ -82,6 +82,7 @@ class Invoice:
         self.identifier = None
         self.pay_info = None
         self.invoice = None
+        self.currency = None
         self.created_at = datetime.now()
 
         for k, v in kwargs.items():
@@ -156,10 +157,8 @@ class Invoice:
 
         return self
 
-    async def check(self) -> str:
+    async def check(self, return_bool: bool = False) -> str | bool:
         """
-        Checks the status of the invoice.
-
         Returns:
             str: Invoice status (paid or else)
 
@@ -172,7 +171,7 @@ class Invoice:
             if 'provider' not in self.__dict__.keys():
                 raise ValueError('Provider is not provided, create invoice first or set provider manually')
             await self.init_invoice(self.provider)
-        return await self.invoice.check()
+        return (await self.invoice.check()).lower() in ['paid', 'payed']
 
     def __repr__(self) -> str:
         return f'Invoice({self.__dict__})'
@@ -226,7 +225,7 @@ class EasyPay:
             identifier (_type_, optional): _description_. Defaults to None.
 
         Returns:
-            Invoice: invoice object
+            Invoice: (Invoice) invoice object
         """
         invoice = Invoice(self.provider, amount=amount, currency=currency)
         if identifier:
@@ -244,6 +243,8 @@ class EasyPay:
         Returns:
             Invoice | None: Invoice object or None if failed
         """
+        if 'currency' not in kwargs.keys():
+            kwargs['currency'] = 'USD'
         invoice = Invoice(self.provider, **kwargs)
         return invoice
 
